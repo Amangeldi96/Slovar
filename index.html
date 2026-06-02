@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dictionary</title>
+    <style>
+        :root { --primary: #007AFF; --bg: #F2F2F7; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg); color: #1c1c1e; }
+        .container { max-width: 500px; margin: 0 auto; padding: 20px; }
+        
+        /* Экрандар */
+        .screen { display: none; }
+        .active { display: block; }
+
+        /* Издөө */
+        .search-wrapper { position: sticky; top: 0; z-index: 100; padding: 10px 0; background: var(--bg); }
+        #search { width: 100%; padding: 15px 20px; border-radius: 20px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.08); font-size: 16px; outline: none; }
+
+        /* Тизме */
+        .list-item { background: white; padding: 18px; margin-bottom: 12px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); cursor: pointer; transition: 0.2s; }
+        .list-item:active { transform: scale(0.98); }
+
+        /* Деталдар */
+        .details-box { background: white; padding: 30px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .back-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-weight: 600; cursor: pointer; color: var(--primary); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="list-screen" class="screen active">
+        <h1 style="margin: 20px 0;">Сөздүк</h1>
+        <div class="search-wrapper">
+            <input type="text" id="search" placeholder="Сөз издөө...">
+        </div>
+        <div id="results" style="margin-top: 15px;"></div>
+    </div>
+
+    <div id="detail-screen" class="screen">
+        <div class="back-nav" onclick="goBack()">❮ Артка</div>
+        <div id="details" class="details-box"></div>
+    </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+    const listScreen = document.getElementById('list-screen');
+    const detailScreen = document.getElementById('detail-screen');
+    const results = document.getElementById('results');
+
+    function render(list) {
+        if (list.length === 0) {
+            results.innerHTML = '<div style="text-align:center; padding:20px;">Табылган жок 🔍</div>';
+            return;
+        }
+        results.innerHTML = list.map(item => `
+            <div class="list-item" onclick="openDetails('${item.en}')">
+                <span style="font-weight: 600;">${item.en}</span>
+                <span style="color: #8e8e93;">${item.ky}</span>
+            </div>
+        `).join("");
+    }
+
+    function openDetails(enWord) {
+        const item = words.find(w => w.en === enWord);
+        if (item) {
+            document.getElementById("details").innerHTML = `
+                <h1 style="font-size: 32px; margin-bottom: 10px;">${item.en}</h1>
+                <p style="color: var(--primary); font-size: 18px; margin-bottom: 20px;">🔈 ${item.pr}</p>
+                <h3 style="color: #333;">🇰🇬 ${item.ky}</h3>
+                <div style="margin-top: 25px; background: #f9f9f9; padding: 20px; border-radius: 20px;">
+                    <p><b>Мисал:</b> ${item.ex}</p>
+                    <p style="color: #666; margin: 8px 0;"><i>Окулушу: ${item.ex_pr}</i></p>
+                    <p>🇰🇬 ${item.ex_ky}</p>
+                </div>
+            `;
+            listScreen.classList.remove('active');
+            detailScreen.classList.add('active');
+        }
+    }
+
+    function goBack() {
+        detailScreen.classList.remove('active');
+        listScreen.classList.add('active');
+    }
+
+    document.getElementById('search').addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        render(words.filter(w => w.en.toLowerCase().includes(query) || w.ky.toLowerCase().includes(query)));
+    });
+
+    render(words);
+</script>
+
+</body>
+</html>
