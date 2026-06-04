@@ -8,32 +8,25 @@
         :root { --primary: #007AFF; --bg: #F2F2F7; }
         body { background: var(--bg); font-family: -apple-system, sans-serif; margin: 0; padding: 0; }
         .container { max-width: 500px; margin: 0 auto; padding: 10px; }
-
-        /* Меню жана Издөө үчүн катып турган бөлүк */
-        .fixed-header { 
-            position: sticky; top: 0; background: var(--bg); z-index: 100; padding: 10px 0;
-        }
-
+        
+        .fixed-header { position: sticky; top: 0; background: var(--bg); z-index: 100; padding: 10px 0; }
         .tabs { display: flex; gap: 5px; margin-bottom: 15px; background: #e5e5ea; padding: 4px; border-radius: 12px; }
         .tab-btn { flex: 1; padding: 10px 5px; border: none; border-radius: 10px; cursor: pointer; font-size: 14px; background: transparent; }
         .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-        #search { width: 100%; padding: 12px; border-radius: 12px; border: none; margin-bottom: 10px; font-size: 16px; box-sizing: border-box; }
+        #search { width: 100%; padding: 12px; border-radius: 12px; border: none; margin-bottom: 10px; box-sizing: border-box; }
+        .list-item { background: white; padding: 15px; margin-bottom: 8px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         
-        .list-item { 
-            background: white; padding: 15px; margin-bottom: 8px; border-radius: 15px; 
-            display: flex; justify-content: space-between; align-items: center; 
-        }
-        /* Тексттер узун болсо кыскартуу үчүн */
-        .text-truncate { 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-            max-width: 60%; 
-        }
+        /* Деталдуу экран */
+        #detail-screen { display: none; background: white; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+        .back-nav { color: var(--primary); font-weight: bold; cursor: pointer; margin-bottom: 20px; }
+        .details-box { font-size: 18px; }
+        .example-box { background: #f2f2f7; padding: 15px; border-radius: 15px; margin-top: 20px; font-size: 16px; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container" id="main-ui">
     <div id="list-screen">
         <div class="fixed-header">
             <div class="tabs">
@@ -43,9 +36,13 @@
             </div>
             <input type="text" id="search" placeholder="Издөө..." oninput="render()">
         </div>
-        
         <div id="results"></div>
     </div>
+</div>
+
+<div id="detail-screen">
+    <div class="back-nav" onclick="goBack()">❮ Артка</div>
+    <div id="details" class="details-box"></div>
 </div>
 
 <script src="data.js"></script>
@@ -64,21 +61,42 @@
 
     function render() {
         const query = document.getElementById('search').value.toLowerCase();
-        let data = [];
-        if (currentMode === 'words') data = typeof words !== 'undefined' ? words : [];
-        if (currentMode === 'numbers') data = typeof numbers !== 'undefined' ? numbers : [];
-        if (currentMode === 'clock') data = typeof clock !== 'undefined' ? clock : [];
+        let data = (currentMode === 'words') ? words : (currentMode === 'numbers') ? numbers : clock;
         
-        const filtered = data.filter(item => 
-            (item.en || '').toLowerCase().includes(query) || (item.ky || '').toLowerCase().includes(query)
-        );
+        const filtered = data.filter(item => (item.en || '').toLowerCase().includes(query) || (item.ky || '').toLowerCase().includes(query));
 
         document.getElementById('results').innerHTML = filtered.map(item => `
-            <div class="list-item">
-                <div class="text-truncate" style="font-weight:600;">${item.en}</div>
-                <div class="text-truncate" style="color:var(--primary); font-weight:bold;">${item.ky}</div>
+            <div class="list-item" onclick="openDetails('${item.en.replace(/'/g, "\\'")}')">
+                <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600;">${item.en}</div>
+                <div style="color:#666; font-size:14px;">${item.ky}</div>
             </div>
         `).join("");
+    }
+
+    function openDetails(enWord) {
+        const all = [...words, ...numbers, ...clock];
+        const item = all.find(w => w.en === enWord);
+        
+        if (item) {
+            document.getElementById("details").innerHTML = `
+                <h1 style="margin:0;">${item.en}</h1>
+                <p style="color:var(--primary); font-size:20px;">🔈 ${item.pr || ''}</p>
+                <h2 style="margin-top:20px;">${item.ky}</h2>
+                ${item.ex ? `
+                <div class="example-box">
+                    <p><b>Мисал:</b> ${item.ex}</p>
+                    <p style="color:#666; font-style:italic;">${item.ex_pr || ''}</p>
+                    <p>🇰🇬 ${item.ex_ky || ''}</p>
+                </div>` : ''}
+            `;
+            document.getElementById('list-screen').style.display = 'none';
+            document.getElementById('detail-screen').style.display = 'block';
+        }
+    }
+
+    function goBack() {
+        document.getElementById('detail-screen').style.display = 'none';
+        document.getElementById('list-screen').style.display = 'block';
     }
 
     render();
