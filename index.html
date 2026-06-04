@@ -36,36 +36,54 @@
 <script src="data2.js"></script>
 
 <script>
-    let currentMode = 'words';
+let currentMode = 'words';
 
-    function changeMode(mode) {
-        currentMode = mode;
-        document.getElementById('btn-words').classList.toggle('active', mode === 'words');
-        document.getElementById('btn-numbers').classList.toggle('active', mode === 'numbers');
-        render();
-    }
+function changeMode(mode) {
+    currentMode = mode;
 
-    function render() {
-        const query = document.getElementById('search').value.toLowerCase();
-        // Эгер 'words' болсо 'words' массивин, 'numbers' болсо 'numbers' массивин алат
-        const list = (currentMode === 'words' ? words : numbers);
-        
-        const filtered = list.filter(item => 
-            item.en.toLowerCase().includes(query) || item.ky.toLowerCase().includes(query)
-        );
+    document.getElementById('btn-words').classList.toggle('active', mode === 'words');
+    document.getElementById('btn-numbers').classList.toggle('active', mode === 'numbers');
 
-        document.getElementById('results').innerHTML = filtered.map(item => `
-            <div class="list-item">
-                <span style="font-weight: bold;">${item.en}</span>
-                <span style="color: #666;">${item.ky}</span>
-            </div>
-        `).join("");
-    }
-
-    document.getElementById('search').addEventListener('input', render);
-    
-    // Алгачкы иштетүү
     render();
+}
+
+function render() {
+    const query = document.getElementById('search').value.toLowerCase();
+
+    let list = [];
+
+    if (currentMode === 'words') {
+        list = typeof words !== 'undefined' ? words : [];
+    } else {
+        list = typeof numbers !== 'undefined' ? numbers : [];
+    }
+
+    const filtered = list.filter(item => {
+        const en = (item.en || '').toLowerCase();
+        const ky = (item.ky || '').toLowerCase();
+
+        return en.includes(query) || ky.includes(query);
+    });
+
+    if (filtered.length === 0) {
+        document.getElementById('results').innerHTML =
+            '<div class="list-item">Табылган жок</div>';
+        return;
+    }
+
+    document.getElementById('results').innerHTML = filtered.map(item => `
+        <div class="list-item">
+            <span style="font-weight:bold">${item.en || ''}</span>
+            <span style="color:#666">${item.ky || ''}</span>
+        </div>
+    `).join('');
+}
+
+document.getElementById('search').addEventListener('input', render);
+
+window.onload = () => {
+    render();
+};
 </script>
 
 </body>
