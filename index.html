@@ -9,20 +9,21 @@
         body { background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 15px; }
         .container { max-width: 500px; margin: 0 auto; }
         
+        /* Меню стили */
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; background: #e5e5ea; padding: 4px; border-radius: 12px; }
-        .tab-btn { flex: 1; padding: 10px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; background: transparent; }
+        .tab-btn { flex: 1; padding: 10px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; background: transparent; transition: 0.3s; }
         .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
         .screen { display: none; }
         .screen.active { display: block; }
 
+        /* Издөө талаасы */
         #search { width: 100%; padding: 15px; border-radius: 15px; border: none; margin-bottom: 20px; font-size: 16px; outline: none; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .list-item { background: white; padding: 15px; margin-bottom: 10px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         
+        .list-item { background: white; padding: 15px; margin-bottom: 10px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .back-nav { padding: 10px 0; color: var(--primary); font-weight: bold; cursor: pointer; display: flex; align-items: center; }
         .details-card { background: white; padding: 25px; border-radius: 25px; }
-        .reading { color: #8e8e93; font-size: 15px; margin: 5px 0; }
-        .example { background: #f2f2f7; padding: 15px; border-radius: 15px; margin-top: 15px; }
+        .reading { color: #8e8e93; font-size: 15px; margin: 2px 0; }
     </style>
 </head>
 <body>
@@ -33,7 +34,7 @@
             <button class="tab-btn active" id="btn-words" onclick="changeMode('words')">Сөздүк</button>
             <button class="tab-btn" id="btn-numbers" onclick="changeMode('numbers')">Сандар</button>
         </div>
-        <input type="text" id="search" placeholder="Издөө...">
+        <input type="text" id="search" placeholder="Сөз же санды издөө..." oninput="render()">
         <div id="results"></div>
     </div>
 
@@ -51,29 +52,44 @@
 
     function changeMode(mode) {
         currentMode = mode;
+        // Баскычтарды жаңыртуу
         document.getElementById('btn-words').classList.toggle('active', mode === 'words');
         document.getElementById('btn-numbers').classList.toggle('active', mode === 'numbers');
+        // Поискти тазалабай туруп, тизмени жаңыртабыз
         render();
     }
 
     function render() {
         const query = document.getElementById('search').value.toLowerCase();
+        // Кайсы маалыматты иштетүү
         const data = currentMode === 'words' ? (typeof words !== 'undefined' ? words : []) : (typeof numbers !== 'undefined' ? numbers : []);
         
-        const filtered = data.filter(item => (item.en || '').toLowerCase().includes(query) || (item.ky || '').toLowerCase().includes(query));
+        // Издөө логикасы
+        const filtered = data.filter(item => 
+            (item.en || '').toLowerCase().includes(query) || 
+            (item.ky || '').toLowerCase().includes(query)
+        );
 
-        document.getElementById('results').innerHTML = filtered.map(item => `
+        const resultsDiv = document.getElementById('results');
+        
+        if (filtered.length === 0) {
+            resultsDiv.innerHTML = '<p style="text-align:center; color:gray; margin-top:20px;">Табылган жок</p>';
+            return;
+        }
+
+        resultsDiv.innerHTML = filtered.map(item => `
             <div class="list-item" onclick="openDetails('${item.en.replace(/'/g, "\\'")}')">
                 <div style="flex:1">
                     <div style="font-weight:600; font-size:17px;">${item.en}</div>
                     <div class="reading">${item.pr || ''}</div>
                 </div>
-                <div style="color:var(--primary)">${item.ky}</div>
+                <div style="color:var(--primary); font-weight:bold;">${item.ky}</div>
             </div>
         `).join("");
     }
 
     function openDetails(enWord) {
+        // Эки массивди тең карап чыгабыз
         const all = [...(typeof words !== 'undefined' ? words : []), ...(typeof numbers !== 'undefined' ? numbers : [])];
         const item = all.find(w => w.en === enWord);
         
@@ -82,10 +98,10 @@
                 <h1 style="margin:0;">${item.en}</h1>
                 <p style="font-size:20px; color:var(--primary); margin: 5px 0;">🔈 ${item.pr || ''}</p>
                 <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
-                <h2 style="margin:0;">${item.ky}</h2>
+                <h2 style="margin:10px 0;">🇰🇬 ${item.ky}</h2>
                 ${item.ex ? `
-                <div class="example">
-                    <p><b>Мисал:</b> ${item.ex}</p>
+                <div style="background:#f2f2f7; padding:15px; border-radius:15px; margin-top:15px;">
+                    <p style="font-size:16px;"><b>Мисал:</b> ${item.ex}</p>
                     <p class="reading">${item.ex_pr || ''}</p>
                     <p style="margin-top:5px;">🇰🇬 ${item.ex_ky || ''}</p>
                 </div>` : ''}
@@ -100,7 +116,7 @@
         document.getElementById('list-screen').classList.add('active');
     }
 
-    document.getElementById('search').addEventListener('input', render);
+    // Баштапкы жүктөө
     render();
 </script>
 </body>
