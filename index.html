@@ -3,28 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Сөздүк жана Сандар</title>
+    <title>Dictionary & Numbers</title>
     <style>
         :root { --primary: #007AFF; --bg: #F2F2F7; }
-        * { box-sizing: border-box; font-family: sans-serif; }
-        body { background: var(--bg); margin: 0; padding: 20px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+        body { background: var(--bg); padding: 20px; }
         .container { max-width: 500px; margin: 0 auto; }
         
-        /* Меню стили */
+        /* Меню */
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab { flex: 1; padding: 12px; border: none; border-radius: 10px; background: #ddd; cursor: pointer; }
-        .tab.active { background: var(--primary); color: white; }
+        .tab-btn { flex: 1; padding: 12px; border-radius: 12px; border: none; cursor: pointer; background: white; font-weight: bold; }
+        .tab-btn.active { background: var(--primary); color: white; }
 
-        .list-item { background: white; padding: 15px; margin-bottom: 10px; border-radius: 12px; display: flex; justify-content: space-between; cursor: pointer; }
-        #search { width: 100%; padding: 15px; border-radius: 12px; border: none; margin-bottom: 20px; outline: none; }
+        /* Издөө жана тизме */
+        #search { width: 100%; padding: 15px; border-radius: 15px; border: none; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .list-item { background: white; padding: 15px; margin-bottom: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="tabs">
-        <button class="tab active" id="btn-words" onclick="setMode('words')">Сөздүк</button>
-        <button class="tab" id="btn-numbers" onclick="setMode('numbers')">Сандар</button>
+        <button class="tab-btn active" id="btn-words" onclick="changeMode('words')">Сөздүк</button>
+        <button class="tab-btn" id="btn-numbers" onclick="changeMode('numbers')">Сандар</button>
     </div>
 
     <input type="text" id="search" placeholder="Издөө...">
@@ -37,7 +38,7 @@
 <script>
     let currentMode = 'words';
 
-    function setMode(mode) {
+    function changeMode(mode) {
         currentMode = mode;
         document.getElementById('btn-words').classList.toggle('active', mode === 'words');
         document.getElementById('btn-numbers').classList.toggle('active', mode === 'numbers');
@@ -46,7 +47,7 @@
 
     function render() {
         const query = document.getElementById('search').value.toLowerCase();
-        // Эгер currentMode 'words' болсо 'words' массивин, 'numbers' болсо 'numbers' массивин алат
+        // Эгер 'words' болсо 'words' массивин, 'numbers' болсо 'numbers' массивин алат
         const list = (currentMode === 'words' ? words : numbers);
         
         const filtered = list.filter(item => 
@@ -55,7 +56,7 @@
 
         document.getElementById('results').innerHTML = filtered.map(item => `
             <div class="list-item">
-                <span><b>${item.en}</b></span>
+                <span style="font-weight: bold;">${item.en}</span>
                 <span style="color: #666;">${item.ky}</span>
             </div>
         `).join("");
