@@ -36,55 +36,72 @@
 <script src="data2.js"></script>
 
 <script>
-let currentMode = 'words';
+    let currentMode = 'words';
+    const listScreen = document.getElementById('list-screen');
+    const detailScreen = document.getElementById('detail-screen');
+    const results = document.getElementById('results');
 
-function changeMode(mode) {
-    currentMode = mode;
-
-    document.getElementById('btn-words').classList.toggle('active', mode === 'words');
-    document.getElementById('btn-numbers').classList.toggle('active', mode === 'numbers');
-
-    render();
-}
-
-function render() {
-    const query = document.getElementById('search').value.toLowerCase();
-
-    let list = [];
-
-    if (currentMode === 'words') {
-        list = typeof words !== 'undefined' ? words : [];
-    } else {
-        list = typeof numbers !== 'undefined' ? numbers : [];
+    function changeMode(mode) {
+        currentMode = mode;
+        // Баскычтардын активдүүлүгүн жаңыртуу
+        document.getElementById('btn-words').classList.toggle('active', mode === 'words');
+        document.getElementById('btn-numbers').classList.toggle('active', mode === 'numbers');
+        
+        // Экранды сөзсүз тизмеге кайтаруу
+        detailScreen.classList.remove('active');
+        listScreen.classList.add('active');
+        
+        render();
     }
 
-    const filtered = list.filter(item => {
-        const en = (item.en || '').toLowerCase();
-        const ky = (item.ky || '').toLowerCase();
+    function render() {
+        const query = document.getElementById('search').value.toLowerCase();
+        // Кайсы массивди колдонууну тандоо
+        const list = (currentMode === 'words' ? (typeof words !== 'undefined' ? words : []) : (typeof numbers !== 'undefined' ? numbers : []));
+        
+        const filtered = list.filter(item => 
+            (item.en || '').toLowerCase().includes(query) || (item.ky || '').toLowerCase().includes(query)
+        );
 
-        return en.includes(query) || ky.includes(query);
-    });
-
-    if (filtered.length === 0) {
-        document.getElementById('results').innerHTML =
-            '<div class="list-item">Табылган жок</div>';
-        return;
+        results.innerHTML = filtered.map(item => `
+            <div class="list-item" onclick="openDetails('${item.en.replace(/'/g, "\\'")}')">
+                <span style="font-weight: 600;">${item.en}</span>
+                <span style="color: #8e8e93;">${item.ky}</span>
+            </div>
+        `).join("");
     }
 
-    document.getElementById('results').innerHTML = filtered.map(item => `
-        <div class="list-item">
-            <span style="font-weight:bold">${item.en || ''}</span>
-            <span style="color:#666">${item.ky || ''}</span>
-        </div>
-    `).join('');
-}
+    function openDetails(enWord) {
+        // Эки массивди тең текшерет
+        const allItems = [...(typeof words !== 'undefined' ? words : []), ...(typeof numbers !== 'undefined' ? numbers : [])];
+        const item = allItems.find(w => w.en === enWord);
+        
+        if (item) {
+            document.getElementById("details").innerHTML = `
+                <h1 style="font-size: 32px; margin-bottom: 10px;">${item.en}</h1>
+                <p style="color: var(--primary); font-size: 18px; margin-bottom: 20px;">🔈 ${item.pr || ''}</p>
+                <h3 style="color: #333;">🇰🇬 ${item.ky}</h3>
+                ${item.ex ? `
+                <div style="margin-top: 25px; background: #f9f9f9; padding: 20px; border-radius: 20px;">
+                    <p><b>Мисал:</b> ${item.ex}</p>
+                    <p style="color: #666; margin: 8px 0;"><i>Окулушу: ${item.ex_pr || ''}</i></p>
+                    <p>🇰🇬 ${item.ex_ky || ''}</p>
+                </div>` : ''}
+            `;
+            listScreen.classList.remove('active');
+            detailScreen.classList.add('active');
+        }
+    }
 
-document.getElementById('search').addEventListener('input', render);
+    function goBack() {
+        detailScreen.classList.remove('active');
+        listScreen.classList.add('active');
+    }
 
-window.onload = () => {
+    document.getElementById('search').addEventListener('input', render);
     render();
-};
 </script>
+    
 
 </body>
 </html>
