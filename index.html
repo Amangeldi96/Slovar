@@ -3,33 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dictionary & Numbers</title>
+    <title>Dictionary</title>
     <style>
         :root { --primary: #007AFF; --bg: #F2F2F7; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
-        body { background: var(--bg); padding: 20px; }
+        body { background: var(--bg); font-family: sans-serif; padding: 20px; }
         .container { max-width: 500px; margin: 0 auto; }
         
-        /* Меню */
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab-btn { flex: 1; padding: 12px; border-radius: 12px; border: none; cursor: pointer; background: white; font-weight: bold; }
+        .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; background: #fff; }
         .tab-btn.active { background: var(--primary); color: white; }
 
-        /* Издөө жана тизме */
-        #search { width: 100%; padding: 15px; border-radius: 15px; border: none; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .list-item { background: white; padding: 15px; margin-bottom: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        .list-item { background: white; padding: 15px; margin-bottom: 10px; border-radius: 12px; cursor: pointer; display: flex; justify-content: space-between; }
+        .back-nav { cursor: pointer; color: var(--primary); margin-bottom: 15px; font-weight: bold; }
+        #details { background: white; padding: 20px; border-radius: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="tabs">
-        <button class="tab-btn active" id="btn-words" onclick="changeMode('words')">Сөздүк</button>
-        <button class="tab-btn" id="btn-numbers" onclick="changeMode('numbers')">Сандар</button>
+    <div id="list-screen" class="screen active">
+        <div class="tabs">
+            <button class="tab-btn active" id="btn-words" onclick="changeMode('words')">Сөздүк</button>
+            <button class="tab-btn" id="btn-numbers" onclick="changeMode('numbers')">Сандар</button>
+        </div>
+        <input type="text" id="search" placeholder="Издөө..." style="width:100%; padding:15px; border-radius:10px; border:none; margin-bottom:15px;">
+        <div id="results"></div>
     </div>
 
-    <input type="text" id="search" placeholder="Издөө...">
-    <div id="results"></div>
+    <div id="detail-screen" class="screen">
+        <div class="back-nav" onclick="goBack()">❮ Артка</div>
+        <div id="details"></div>
+    </div>
 </div>
 
 <script src="data.js"></script>
@@ -37,71 +44,58 @@
 
 <script>
     let currentMode = 'words';
-    const listScreen = document.getElementById('list-screen');
-    const detailScreen = document.getElementById('detail-screen');
-    const results = document.getElementById('results');
 
     function changeMode(mode) {
         currentMode = mode;
-        // Баскычтардын активдүүлүгүн жаңыртуу
         document.getElementById('btn-words').classList.toggle('active', mode === 'words');
         document.getElementById('btn-numbers').classList.toggle('active', mode === 'numbers');
-        
-        // Экранды сөзсүз тизмеге кайтаруу
-        detailScreen.classList.remove('active');
-        listScreen.classList.add('active');
-        
+        document.getElementById('list-screen').classList.add('active');
+        document.getElementById('detail-screen').classList.remove('active');
         render();
     }
 
     function render() {
         const query = document.getElementById('search').value.toLowerCase();
-        // Кайсы массивди колдонууну тандоо
+        // Эгер массив жок болсо, бош массив алат
         const list = (currentMode === 'words' ? (typeof words !== 'undefined' ? words : []) : (typeof numbers !== 'undefined' ? numbers : []));
         
-        const filtered = list.filter(item => 
-            (item.en || '').toLowerCase().includes(query) || (item.ky || '').toLowerCase().includes(query)
-        );
+        const filtered = list.filter(item => (item.en || '').toLowerCase().includes(query) || (item.ky || '').toLowerCase().includes(query));
 
-        results.innerHTML = filtered.map(item => `
+        document.getElementById('results').innerHTML = filtered.map(item => `
             <div class="list-item" onclick="openDetails('${item.en.replace(/'/g, "\\'")}')">
-                <span style="font-weight: 600;">${item.en}</span>
-                <span style="color: #8e8e93;">${item.ky}</span>
+                <b>${item.en}</b>
+                <span style="color:gray">${item.ky}</span>
             </div>
         `).join("");
     }
 
     function openDetails(enWord) {
-        // Эки массивди тең текшерет
-        const allItems = [...(typeof words !== 'undefined' ? words : []), ...(typeof numbers !== 'undefined' ? numbers : [])];
-        const item = allItems.find(w => w.en === enWord);
+        // Бардык маалыматты бириктирет
+        const all = [...(typeof words !== 'undefined' ? words : []), ...(typeof numbers !== 'undefined' ? numbers : [])];
+        const item = all.find(w => w.en === enWord);
         
         if (item) {
             document.getElementById("details").innerHTML = `
-                <h1 style="font-size: 32px; margin-bottom: 10px;">${item.en}</h1>
-                <p style="color: var(--primary); font-size: 18px; margin-bottom: 20px;">🔈 ${item.pr || ''}</p>
-                <h3 style="color: #333;">🇰🇬 ${item.ky}</h3>
-                ${item.ex ? `
-                <div style="margin-top: 25px; background: #f9f9f9; padding: 20px; border-radius: 20px;">
+                <h1 style="margin-bottom:10px;">${item.en}</h1>
+                <p style="color:var(--primary); font-size:18px;">🔈 ${item.pr || '—'}</p>
+                <h3 style="margin-top:20px;">🇰🇬 ${item.ky}</h3>
+                ${item.ex ? `<div style="margin-top:20px; background:#f9f9f9; padding:15px; border-radius:10px;">
                     <p><b>Мисал:</b> ${item.ex}</p>
-                    <p style="color: #666; margin: 8px 0;"><i>Окулушу: ${item.ex_pr || ''}</i></p>
-                    <p>🇰🇬 ${item.ex_ky || ''}</p>
+                    <p><i>${item.ex_ky || ''}</i></p>
                 </div>` : ''}
             `;
-            listScreen.classList.remove('active');
-            detailScreen.classList.add('active');
+            document.getElementById('list-screen').classList.remove('active');
+            document.getElementById('detail-screen').classList.add('active');
         }
     }
 
     function goBack() {
-        detailScreen.classList.remove('active');
-        listScreen.classList.add('active');
+        document.getElementById('detail-screen').classList.remove('active');
+        document.getElementById('list-screen').classList.add('active');
     }
 
     document.getElementById('search').addEventListener('input', render);
     render();
 </script>
-    
-
 </body>
 </html>
